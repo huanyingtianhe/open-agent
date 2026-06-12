@@ -1,0 +1,28 @@
+{
+  "name": "open-agent",
+  "version": "0.1.0",
+  "description": "A minimal Claude-Code-style agent. Implements chapters s01-s07 of https://learn.shareai.run/en/",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "open-agent": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "gray-matter": "^4.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

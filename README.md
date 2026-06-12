@@ -1,0 +1,148 @@
+# open-agent
+
+A readable, end-to-end TypeScript implementation of a Claude-Code-style agent.
+Tracks **all 19 chapters** of [Learn Claude Code](https://learn.shareai.run/en/).
+
+## Chapter ↔ code map
+
+| # | Chapter | Where it lives |
+|---|---|---|
+| s01 | Agent Loop | `src/agent.ts` |
+| s02 | Tool Use | `src/tools/registry.ts` + every `src/tools/*.ts` |
+| s03 | TodoWrite | `src/tools/todo-write.ts` |
+| s04 | Subagent | `src/tools/subagent.ts`, `runSubagent` in `src/index.ts` |
+| s05 | Skills | `src/skills/loader.ts`, `src/tools/skill.ts`, `skills/*/SKILL.md` |
+| s06 | Context Compact | `src/context/compact.ts` |
+| s07 | Permission System | `src/permissions/pipeline.ts` |
+| s08 | Hook System | `src/hooks/manager.ts` + `src/hooks/builtin.ts` |
+| s09 | Memory System | `src/memory/store.ts` + AGENTS.md auto-loader + `memorize/recall/forget` tools |
+| s10 | System Prompt | `src/prompt/builder.ts` (sectioned pipeline) |
+| s11 | Error Recovery | `src/recovery/classifier.ts` |
+| s12 | Task System | `src/tasks/graph.ts` + `task_create/update/list` tools |
+| s13 | Background Tasks | `src/background/runner.ts` + `background_start/status/result` tools |
+| s14 | Cron Scheduler | `src/cron/scheduler.ts` (reads `.open-agent/cron.json`) |
+| s15 | Agent Teams | `src/teams/store.ts` + `team_hire/list` tools |
+| s16 | Team Protocols | request/response envelope in `src/teams/store.ts` + `team_send/await_response` |
+| s17 | Autonomous Agents | `src/autonomy/loop.ts` (idle → scan → claim → resume → emit) |
+| s18 | Worktree Isolation | `src/worktree/manager.ts` + `worktree_create/remove/list` tools |
+| s19 | MCP & Plugins | `src/plugins/loader.ts` + `plugins/example/index.mjs` |
+
+## Quick start
+
+```pwsh
+cd Q:\repos\open-agent
+npm install
+copy .env.example .env   # add your provider credentials
+
+npm run dev                       # REPL, default mode (asks before writes)
+npm run dev -- --yolo             # auto-approve all tools
+npm run dev -- --plan             # block writes; planning only
+npm run dev -- --cron             # start cron scheduler (reads .open-agent/cron.json)
+npm run dev -- --autonomous       # start autonomous loop (answers teammate inboxes)
+npm run dev -- --cwd C:\some\dir  # change agent working directory
+```
+
+## LLM providers
+
+Pick a backend with the `LLM_PROVIDER` env var. The agent loop, tools, hooks,
+and skills are identical across providers — only `src/llm.ts` changes.
+
+| Provider | `LLM_PROVIDER` | Required env vars | Notes |
+|---|---|---|---|
+| Anthropic (default) | `anthropic` | `ANTHROPIC_API_KEY` (+ optional `ANTHROPIC_MODEL`) | Uses official SDK. |
+| GitHub Copilot | `copilot` | One of: `GITHUB_COPILOT_TOKEN`, `GITHUB_TOKEN`, or `gh auth token` available on PATH. Optional `COPILOT_MODEL`. | Requires an active Copilot subscription. Uses the undocumented Copilot chat endpoint; may break if upstream changes. |
+| Azure OpenAI | `azure-openai` | `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, plus either `AZURE_OPENAI_API_KEY` or `AZURE_OPENAI_BEARER_TOKEN`. Optional `AZURE_OPENAI_API_VERSION` (default `2024-10-21`). | Deployment name lives in the URL, so the request `model` field is ignored. |
+
+**Adding a new provider** is a 3-step change isolated to `src/llm/`:
+1. Implement the `Provider` interface in `src/llm/<name>.ts`.
+2. Add a case to `pickProvider()` in `src/llm.ts`.
+3. Document its env vars in `.env.example`.
+
+For any OpenAI-compatible API (OpenRouter, Ollama, Mistral, Together…) you can
+reuse `src/llm/openai-compat.ts` and write a 30-line provider class.
+
+REPL commands:
+
+| Command | Shows |
+|---|---|
+| `/exit` | quit |
+| `/todos` | in-session todo list (s03) |
+| `/tasks` | durable task graph (s12) |
+| `/memory` | remembered notes index (s09) |
+| `/team` | hired teammates (s15) |
+| `/background` | background jobs (s13) |
+| `/cron` | scheduled jobs (s14) |
+| `/hooks` | registered hooks (s08) |
+| `/plugins` | loaded plugins (s19) |
+
+## Persistence layout
+
+All durable state lives under `<cwd>/.open-agent/`:
+
+```
+.open-agent/
+├── memory.json        # s09
+├── tasks.json         # s12
+├── team.json          # s15 (teammates + inbox)
+├── cron.json          # s14 (you edit this manually)
+└── worktrees/         # s18 (created by git worktree add)
+```
+
+`AGENTS.md` files anywhere from `cwd` up to filesystem root are auto-collected
+into the system prompt.
+
+## Architecture in one paragraph
+
+The whole agent is one `while` loop in `src/agent.ts`. Each iteration: maybe
+compact the history (s06), fire `before_model_call` hooks (s08), call the model
+with retry-on-transient (s11), fire `after_model_call`, then for every
+`tool_use` block run it through the **hook → permission → handler → hook**
+pipeline. Tool results go back as a single `user` message of `tool_result`
+blocks. Everything else — skills, memory, durable tasks, background jobs,
+teammates, worktrees, plugins — is just more tools added to the registry. The
+loop never grew past ~200 lines.
+
+## Adding things
+
+| To add a... | Do this |
+|---|---|
+| Tool | Create `src/tools/X.ts` exporting a `ToolDefinition`; register it in `src/index.ts`. |
+| Skill | Create `skills/<name>/SKILL.md` with YAML frontmatter (`name`, `description`). |
+| Hook | Call `hookManager.register("<event>", "<name>", fn)` in `src/index.ts`. |
+| Plugin | Create `plugins/<name>/index.mjs` exporting `{ name, tools[] }`. |
+| Cron job | Edit `.open-agent/cron.json`: `[{ "id", "interval_seconds", "prompt" }]`. |
+| Teammate | Use the `team_hire` tool inside the REPL (persists to `team.json`). |
+
+## Examples
+
+```text
+you> remember that this repo's main branch is `trunk` not `main`
+agent> [memorize key=repo-main-branch ...]
+
+you> hire a teammate named "doc-writer" whose role is to draft markdown docs;
+     system prompt: "You are a concise technical writer. Use bullets."
+
+you> /team
+doc-writer -- to draft markdown docs
+
+# in another terminal, run autonomous mode so doc-writer answers messages:
+npm run dev -- --autonomous
+
+# then back in the first REPL:
+you> send doc-writer a request asking for a 5-bullet description of this repo
+agent> [team_send id=ab12cd34 to=doc-writer ...]
+agent> [team_await_response request_id=ab12cd34 ...]
+agent> Here is what doc-writer wrote: ...
+```
+
+## Intentional non-goals
+
+- **No production polish.** Error messages, retries, and concurrency safety
+  are minimum-viable. The point is to be read.
+- **No real MCP.** The plugin loader uses the same registry contract MCP would
+  plug into — wrap an MCP stdio client in one plugin and you're done.
+- **No multi-process isolation.** Teammates / background / autonomy all share
+  one Node process. Add `worker_threads` or `child_process.fork` when needed.
+- **No conversational continuity across turns.** Each `you>` starts fresh.
+  Durable state (memory, tasks, team inbox) is what survives. Easy to extend
+  by carrying `result.messages` forward — see TODO in `src/index.ts`.
