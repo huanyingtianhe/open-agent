@@ -45,8 +45,12 @@ export async function loadAgentsMd(startDir: string): Promise<string> {
 export interface MemoryEntry {
   key: string;
   value: string;
+  type?: MemoryType;
+  description?: string;
   created_at: string;
 }
+
+export type MemoryType = "user" | "feedback" | "project" | "reference";
 
 export class MemoryStore {
   private entries = new Map<string, MemoryEntry>();
@@ -77,8 +81,28 @@ export class MemoryStore {
     await this.save();
   }
 
+  async setExtracted(entry: {
+    key: string;
+    value: string;
+    type: MemoryType;
+    description: string;
+  }): Promise<void> {
+    this.entries.set(entry.key, {
+      key: entry.key,
+      value: entry.value,
+      type: entry.type,
+      description: entry.description,
+      created_at: new Date().toISOString(),
+    });
+    await this.save();
+  }
+
   get(key: string): string | undefined {
     return this.entries.get(key)?.value;
+  }
+
+  has(key: string): boolean {
+    return this.entries.has(key);
   }
 
   async delete(key: string): Promise<boolean> {
@@ -95,7 +119,11 @@ export class MemoryStore {
   summary(): string {
     if (this.entries.size === 0) return "(no remembered notes)";
     return this.list()
-      .map((e) => `- ${e.key}: ${truncate(e.value, 80)}`)
+      .map((e) => {
+        const type = e.type ? `[${e.type}] ` : "";
+        const text = e.description || truncate(e.value, 80);
+        return `- ${type}${e.key}: ${text}`;
+      })
       .join("\n");
   }
 }
