@@ -4,7 +4,7 @@ import path from "node:path";
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { loadMcpConfig } from "./config.js";
+import { loadMcpConfig } from "../../src/mcp/config.js";
 
 test("loadMcpConfig returns no servers when config is missing", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "open-agent-mcp-"));

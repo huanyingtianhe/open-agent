@@ -28,6 +28,7 @@ import { HookManager } from "./hooks/manager.js";
 import { installDefaults as installDefaultHooks } from "./hooks/builtin.js";
 // s09
 import { MemoryStore, loadAgentsMd } from "./memory/store.js";
+import { extractMemoriesAfterTurn } from "./memory/extract.js";
 import { makeMemorizeTool, makeRecallTool, makeForgetTool } from "./tools/memory.js";
 // s10
 import {
@@ -435,6 +436,9 @@ async function main(): Promise<void> {
         hooks: { runSubagent, loadSkill: skillHook },
         priorMessages: conversation,
       });
+
+      const extracted = await extractMemoriesAfterTurn(memory, result.messages);
+      if (extracted > 0) log.info(`memory: extracted ${extracted} new note(s)`);
 
       // Carry the full message tail forward, capped to keep things bounded.
       conversation = result.messages.slice(-MAX_CARRIED_MESSAGES);

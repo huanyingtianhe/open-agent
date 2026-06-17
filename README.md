@@ -1,31 +1,31 @@
 # open-agent
 
 A readable, end-to-end TypeScript implementation of a Claude-Code-style agent.
-Tracks **all 19 chapters** of [Learn Claude Code](https://learn.shareai.run/en/).
 
-## Chapter ↔ code map
+## Code map
 
-| # | Chapter | Where it lives |
+| Area | What it covers | Where it lives |
 |---|---|---|
-| s01 | Agent Loop | `src/agent.ts` |
-| s02 | Tool Use | `src/tools/registry.ts` + every `src/tools/*.ts` |
-| s03 | TodoWrite | `src/tools/todo-write.ts` |
-| s04 | Subagent | `src/tools/subagent.ts`, `runSubagent` in `src/index.ts` |
-| s05 | Skills | `src/skills/loader.ts`, `src/tools/skill.ts`, `skills/*/SKILL.md` |
-| s06 | Context Compact | `src/context/compact.ts` |
-| s07 | Permission System | `src/permissions/pipeline.ts` |
-| s08 | Hook System | `src/hooks/manager.ts` + `src/hooks/builtin.ts` |
-| s09 | Memory System | `src/memory/store.ts` + AGENTS.md auto-loader + `memorize/recall/forget` tools |
-| s10 | System Prompt | `src/prompt/builder.ts` (sectioned pipeline) |
-| s11 | Error Recovery | `src/recovery/classifier.ts` |
-| s12 | Task System | `src/tasks/graph.ts` + `task_create/update/list` tools |
-| s13 | Background Tasks | `src/background/runner.ts` + `background_start/status/result` tools |
-| s14 | Cron Scheduler | `src/cron/scheduler.ts` (reads `.open-agent/cron.json`) |
-| s15 | Agent Teams | `src/teams/store.ts` + `team_hire/list` tools |
-| s16 | Team Protocols | request/response envelope in `src/teams/store.ts` + `team_send/await_response` |
-| s17 | Autonomous Agents | `src/autonomy/loop.ts` (idle → scan → claim → resume → emit) |
-| s18 | Worktree Isolation | `src/worktree/manager.ts` + `worktree_create/remove/list` tools |
-| s19 | MCP & Plugins | `src/mcp/manager.ts`, `src/plugins/loader.ts` + `plugins/example/index.mjs` |
+| Agent loop | Model calls, message history, and tool execution | `src/agent.ts` |
+| Tool registry | Tool schemas, dispatch, and built-in tools | `src/tools/registry.ts` + `src/tools/*.ts` |
+| Todos | In-session task tracking | `src/tools/todo-write.ts` |
+| Subagents | Delegated agent runs | `src/tools/subagent.ts`, `runSubagent` in `src/index.ts` |
+| Skills | Markdown skill discovery and invocation | `src/skills/loader.ts`, `src/tools/skill.ts`, `skills/*/SKILL.md` |
+| Context compaction | History summarization before model calls | `src/context/compact.ts` |
+| Permissions | Approval policy before tool execution | `src/permissions/pipeline.ts` |
+| Hooks | Lifecycle hooks around model and tool calls | `src/hooks/manager.ts` + `src/hooks/builtin.ts` |
+| Memory | Durable notes and AGENTS.md auto-loading | `src/memory/store.ts` + `memorize/recall/forget` tools |
+| Prompt builder | Sectioned system prompt assembly | `src/prompt/builder.ts` |
+| Error recovery | Retry classification for transient failures | `src/recovery/classifier.ts` |
+| Tasks | Durable task graph operations | `src/tasks/graph.ts` + `task_create/update/list` tools |
+| Background jobs | Long-running work outside the foreground loop | `src/background/runner.ts` + `background_start/status/result` tools |
+| Cron | Scheduled prompts from `.open-agent/cron.json` | `src/cron/scheduler.ts` |
+| Teams | Teammate records and inbox state | `src/teams/store.ts` + `team_hire/list` tools |
+| Team protocol | Request/response envelopes between teammates | `src/teams/store.ts` + `team_send/await_response` |
+| Autonomy | Idle scanning, claiming, resuming, and emitting work | `src/autonomy/loop.ts` |
+| Worktrees | Isolated git worktree management | `src/worktree/manager.ts` + `worktree_create/remove/list` tools |
+| MCP | Configured MCP servers and namespaced MCP tools | `src/mcp/manager.ts`, `src/mcp/config.ts`, `src/mcp/tools.ts` |
+| Plugins | External tool loading and plugin examples | `src/plugins/loader.ts` + `plugins/example/index.mjs` |
 
 ## Quick start
 

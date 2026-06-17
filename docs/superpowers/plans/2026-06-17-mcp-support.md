@@ -23,7 +23,7 @@
 **Files:**
 - Create: `src/mcp/config.ts`
 - Create: `src/mcp/tools.ts`
-- Create: `src/mcp/tools.test.ts`
+- Create: `test/mcp/tools.test.ts`
 - Modify: `package.json`
 
 **Interfaces:**
@@ -31,8 +31,8 @@
 - Produces: `makeMcpToolName(serverName: string, toolName: string): string`
 - Produces: `createMcpToolDefinition(serverName, tool, callTool): ToolDefinition`
 
-- [x] Write tests for namespacing and result formatting in `src/mcp/tools.test.ts`.
-- [x] Add a `test` script that builds TypeScript and runs compiled Node tests.
+- [x] Write tests for namespacing and result formatting in `test/mcp/tools.test.ts`.
+- [x] Add a `test` script that runs TypeScript tests from the `tests/` folder.
 - [x] Implement `config.ts` and `tools.ts` with no SDK dependency.
 - [ ] Run `npm test` and confirm the new tests pass.
 

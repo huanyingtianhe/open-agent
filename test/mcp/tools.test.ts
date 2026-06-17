@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { createMcpToolDefinition, formatMcpToolResult, makeMcpToolName } from "./tools.js";
+import { createMcpToolDefinition, formatMcpToolResult, makeMcpToolName } from "../../src/mcp/tools.js";
 
 test("makeMcpToolName namespaces server and tool names", () => {
   assert.equal(makeMcpToolName("local-fs", "read.file"), "mcp__local_fs__read_file");

@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "test": "npm run build && node --test \"dist/**/*.test.js\"",
+    "test": "tsx --test \"test/**/*.test.ts\"",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
