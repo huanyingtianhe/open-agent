@@ -111,13 +111,19 @@ function isExtractedMemory(value: unknown): value is ExtractedMemory {
 function formatRecentMessages(messages: ApiMessage[]): string {
   return messages
     .map((message) => {
-      const content = typeof message.content === "string" ? message.content : formatBlocks(message.content);
+      const content = typeof message.content === "string" ? message.content : formatBlocks(message.content as MessageBlock[]);
       return `${message.role}: ${content}`;
     })
     .join("\n\n");
 }
 
-function formatBlocks(blocks: ContentBlock[]): string {
+type MessageBlock =
+  | { type: "text"; text: string }
+  | { type: "tool_use"; name: string; input?: unknown }
+  | { type: "tool_result"; content?: unknown; is_error?: boolean }
+  | Record<string, unknown>;
+
+function formatBlocks(blocks: MessageBlock[]): string {
   return blocks
     .map((block) => {
       if (block.type === "text") return block.text;
