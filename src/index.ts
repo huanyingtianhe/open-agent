@@ -68,6 +68,7 @@ import {
 } from "./tools/worktree.js";
 // s19
 import { PluginLoader } from "./plugins/loader.js";
+import { McpManager } from "./mcp/manager.js";
 // Copilot auth (for /login, /logout commands)
 import {
   clearCachedToken as clearCopilotCachedToken,
@@ -185,6 +186,10 @@ async function main(): Promise<void> {
   const pluginLoader = new PluginLoader(pluginsDir);
   const loadedPlugins = await pluginLoader.loadAll();
 
+  // --- s19 MCP servers ---
+  const mcp = new McpManager(args.cwd);
+  await mcp.load();
+
   // --- registry: register every tool ---
   const registry = new ToolRegistry();
 
@@ -229,6 +234,15 @@ async function main(): Promise<void> {
       } catch (err) {
         log.warn(`plugin ${p.manifest.name}: ${(err as Error).message}`);
       }
+    }
+  }
+
+  // MCP tools use their own namespace (`mcp__server__tool`) to avoid conflicts.
+  for (const t of mcp.tools()) {
+    try {
+      registry.register(t);
+    } catch (err) {
+      log.warn(`mcp tool ${t.name}: ${(err as Error).message}`);
     }
   }
 
@@ -326,10 +340,10 @@ async function main(): Promise<void> {
     `open-agent ready. provider=${providerName()} mode=${args.mode} cwd=${args.cwd} ` +
       `skills=${skills.list().length} tools=${registry.all().length} ` +
       `plugins=${loadedPlugins.length} tasks=${tasks.list().length} ` +
-      `teammates=${team.listTeammates().length}`,
+      `mcp_tools=${mcp.tools().length} teammates=${team.listTeammates().length}`,
   );
   log.info(
-    "Commands: /exit /todos /tasks /memory /team /background /cron /hooks /plugins /reset /login /logout",
+    "Commands: /exit /todos /tasks /memory /team /background /cron /hooks /plugins /mcp /reset /login /logout",
   );
 
   // --- REPL ---
@@ -406,6 +420,10 @@ async function main(): Promise<void> {
         );
         continue;
       }
+      if (userInput === "/mcp") {
+        log.info(mcp.summary());
+        continue;
+      }
 
       const result = await runAgent(userInput, {
         systemPrompt: getSystemPrompt,
@@ -425,6 +443,7 @@ async function main(): Promise<void> {
     rl.close();
     autonomy.stop();
     cron.stop();
+    await mcp.close();
   }
 }
 

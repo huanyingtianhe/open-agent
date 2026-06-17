@@ -25,7 +25,7 @@ Tracks **all 19 chapters** of [Learn Claude Code](https://learn.shareai.run/en/)
 | s16 | Team Protocols | request/response envelope in `src/teams/store.ts` + `team_send/await_response` |
 | s17 | Autonomous Agents | `src/autonomy/loop.ts` (idle → scan → claim → resume → emit) |
 | s18 | Worktree Isolation | `src/worktree/manager.ts` + `worktree_create/remove/list` tools |
-| s19 | MCP & Plugins | `src/plugins/loader.ts` + `plugins/example/index.mjs` |
+| s19 | MCP & Plugins | `src/mcp/manager.ts`, `src/plugins/loader.ts` + `plugins/example/index.mjs` |
 
 ## Quick start
 
@@ -74,6 +74,7 @@ REPL commands:
 | `/cron` | scheduled jobs (s14) |
 | `/hooks` | registered hooks (s08) |
 | `/plugins` | loaded plugins (s19) |
+| `/mcp` | configured MCP servers and tool counts (s19) |
 
 ## Persistence layout
 
@@ -85,6 +86,7 @@ All durable state lives under `<cwd>/.open-agent/`:
 ├── tasks.json         # s12
 ├── team.json          # s15 (teammates + inbox)
 ├── cron.json          # s14 (you edit this manually)
+├── mcp.json           # s19 (optional MCP server config)
 └── worktrees/         # s18 (created by git worktree add)
 ```
 
@@ -113,6 +115,38 @@ loop never grew past ~200 lines.
 | Cron job | Edit `.open-agent/cron.json`: `[{ "id", "interval_seconds", "prompt" }]`. |
 | Teammate | Use the `team_hire` tool inside the REPL (persists to `team.json`). |
 
+## MCP servers
+
+MCP servers are configured in `.open-agent/mcp.json`. At startup, open-agent
+connects to each server, lists its tools, and registers them as normal agent
+tools using the name format `mcp__<server>__<tool>`.
+
+```json
+{
+  "servers": {
+    "filesystem": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "local-sse": {
+      "transport": "sse",
+      "url": "http://localhost:3000/sse"
+    },
+    "remote-http": {
+      "transport": "http",
+      "url": "https://example.com/mcp",
+      "headers": {
+        "authorization": "Bearer ${MCP_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+If a server fails to connect, the agent logs a warning and continues with the
+other tools. Use `/mcp` in the REPL to see connected servers and tool counts.
+
 ## Examples
 
 ```text
@@ -139,8 +173,8 @@ agent> Here is what doc-writer wrote: ...
 
 - **No production polish.** Error messages, retries, and concurrency safety
   are minimum-viable. The point is to be read.
-- **No real MCP.** The plugin loader uses the same registry contract MCP would
-  plug into — wrap an MCP stdio client in one plugin and you're done.
+- **No MCP resources/prompts yet.** MCP tool calls are supported, but resource
+  browsing and prompt templates are not wired into the agent loop yet.
 - **No multi-process isolation.** Teammates / background / autonomy all share
   one Node process. Add `worker_threads` or `child_process.fork` when needed.
 - **No conversational continuity across turns.** Each `you>` starts fresh.
