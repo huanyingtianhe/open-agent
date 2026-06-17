@@ -4,7 +4,7 @@ import test from "node:test";
 import { createMcpToolDefinition, formatMcpToolResult, makeMcpToolName } from "../../src/mcp/tools.js";
 
 test("makeMcpToolName namespaces server and tool names", () => {
-  assert.equal(makeMcpToolName("local-fs", "read.file"), "mcp__local_fs__read_file");
+  assert.equal(makeMcpToolName("local-fs", "read.file"), "mcp__local-fs__read_file");
 });
 
 test("createMcpToolDefinition forwards input to the MCP call", async () => {
