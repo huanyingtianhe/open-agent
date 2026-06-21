@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
 import { promises as fs } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { runAgent } from "./agent.js";
 import { providerName } from "./llm.js";
@@ -126,6 +126,11 @@ async function loadDotenv(): Promise<void> {
   }
 }
 
+function isDirectExecution(importMetaUrl: string, argvPath: string | undefined = process.argv[1]): boolean {
+  if (!argvPath) return false;
+  return pathToFileURL(path.resolve(argvPath)).href === importMetaUrl;
+}
+
 // ---- locate skills & plugins directories --------------------------------
 
 async function locateDir(candidates: string[]): Promise<string> {
@@ -142,9 +147,9 @@ async function locateDir(candidates: string[]): Promise<string> {
 
 // ---- main ---------------------------------------------------------------
 
-async function main(): Promise<void> {
+export async function main(argv: string[] = process.argv.slice(2)): Promise<void> {
   await loadDotenv();
-  const args = parseArgs(process.argv.slice(2));
+  const args = parseArgs(argv);
 
   // --- locate static asset dirs (skills, plugins) ---
   const skillsDir = await locateDir([
@@ -451,7 +456,9 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  log.error(err instanceof Error ? err.stack ?? err.message : String(err));
-  process.exit(1);
-});
+if (isDirectExecution(import.meta.url)) {
+  main().catch((err) => {
+    log.error(err instanceof Error ? err.stack ?? err.message : String(err));
+    process.exit(1);
+  });
+}
