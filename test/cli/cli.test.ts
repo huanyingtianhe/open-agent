@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
@@ -97,17 +98,29 @@ test("runCli rejects old Node versions before entering the agent runtime", async
   }
 });
 
-test("npm test exercises the built CLI smoke path", () => {
-  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-  const result = spawnSync(npmCommand, ["run", "test:cli"], {
+test("built CLI smoke path prints help and version", () => {
+  const tscPath = path.resolve("node_modules", "typescript", "bin", "tsc");
+  const build = spawnSync(process.execPath, [tscPath], {
     encoding: "utf8",
     timeout: 120_000,
   });
 
-  assert.equal(result.error, undefined, result.error?.message);
+  assert.equal(build.error, undefined, build.error?.message);
   assert.equal(
-    result.status,
+    build.status,
     0,
-    [result.stdout, result.stderr].filter(Boolean).join("\n") || "npm run test:cli failed",
+    [build.stdout, build.stderr].filter(Boolean).join("\n") || "TypeScript build failed",
   );
+
+  const cliPath = path.resolve("dist", "cli.js");
+  const help = spawnSync(process.execPath, [cliPath, "--help"], { encoding: "utf8" });
+  assert.equal(help.error, undefined, help.error?.message);
+  assert.equal(help.status, 0, [help.stdout, help.stderr].filter(Boolean).join("\n"));
+  assert.match(help.stdout, /^openagent 0\.1\.0/m);
+  assert.match(help.stdout, /Usage:\n  openagent \[options\]/m);
+
+  const version = spawnSync(process.execPath, [cliPath, "--version"], { encoding: "utf8" });
+  assert.equal(version.error, undefined, version.error?.message);
+  assert.equal(version.status, 0, [version.stdout, version.stderr].filter(Boolean).join("\n"));
+  assert.equal(version.stdout.trim(), "0.1.0");
 });
