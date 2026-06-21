@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 
@@ -94,4 +95,19 @@ test("runCli rejects old Node versions before entering the agent runtime", async
   } finally {
     console.error = originalError;
   }
+});
+
+test("npm test exercises the built CLI smoke path", () => {
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  const result = spawnSync(npmCommand, ["run", "test:cli"], {
+    encoding: "utf8",
+    timeout: 120_000,
+  });
+
+  assert.equal(result.error, undefined, result.error?.message);
+  assert.equal(
+    result.status,
+    0,
+    [result.stdout, result.stderr].filter(Boolean).join("\n") || "npm run test:cli failed",
+  );
 });
