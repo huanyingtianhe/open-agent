@@ -29,6 +29,20 @@ A readable, end-to-end TypeScript implementation of a Claude-Code-style agent.
 
 ## Quick start
 
+### Global CLI
+
+```pwsh
+npm install -g open-agent
+openagent
+openagent --cwd C:\some\dir
+openagent --yolo
+openagent --plan
+```
+
+`open-agent` is also available as a compatibility alias for `openagent`.
+
+### Local development
+
 ```pwsh
 cd Q:\repos\open-agent
 npm install
