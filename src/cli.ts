@@ -2,6 +2,7 @@
 
 import path from "node:path";
 import { createRequire } from "node:module";
+import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { main } from "./index.js";
@@ -45,9 +46,13 @@ Examples:
 `;
 }
 
-export function isDirectExecution(importMetaUrl: string, argvPath: string | undefined = process.argv[1]): boolean {
+export function isDirectExecution(
+  importMetaUrl: string,
+  argvPath: string | undefined = process.argv[1],
+  realpath: (path: string) => string = realpathSync.native,
+): boolean {
   if (!argvPath) return false;
-  return path.resolve(fileURLToPath(importMetaUrl)) === path.resolve(argvPath);
+  return realpath(path.resolve(fileURLToPath(importMetaUrl))) === realpath(path.resolve(argvPath));
 }
 
 function readPackageInfo(): PackageInfo {

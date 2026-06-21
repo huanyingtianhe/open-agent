@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
@@ -33,12 +34,40 @@ test("formatHelp documents global openagent usage", () => {
   assert.match(help, /--plan/m);
 });
 
-test("isDirectExecution compares file URLs with the executed argv path", () => {
-  const file = process.platform === "win32" ? "C:\\repo\\dist\\cli.js" : "/repo/dist/cli.js";
-  const url = pathToFileURL(file).href;
+test("isDirectExecution compares file URLs with the executed argv path", async () => {
+  const root = await fs.mkdtemp(path.join(process.cwd(), ".tmp-openagent-direct-"));
+  const file = path.join(root, "dist", "cli.js");
+  await fs.mkdir(path.dirname(file), { recursive: true });
+  await fs.writeFile(file, "", "utf8");
 
-  assert.equal(isDirectExecution(url, file), true);
-  assert.equal(isDirectExecution(url, undefined), false);
+  try {
+    assert.equal(isDirectExecution(pathToFileURL(file).href, file), true);
+    assert.equal(isDirectExecution(pathToFileURL(file).href, undefined), false);
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("isDirectExecution resolves npm-style symlinked argv paths", async () => {
+  const root = await fs.mkdtemp(path.join(process.cwd(), ".tmp-openagent-bin-"));
+  try {
+    const realFile = path.join(root, "dist", "cli.js");
+    const binFile = path.join(root, "bin", "openagent");
+    await fs.mkdir(path.dirname(realFile), { recursive: true });
+    await fs.mkdir(path.dirname(binFile), { recursive: true });
+    await fs.writeFile(realFile, "", "utf8");
+
+    try {
+      await fs.symlink(realFile, binFile, "file");
+      assert.equal(isDirectExecution(pathToFileURL(realFile).href, binFile), true);
+    } catch {
+      const fakeRealpath = (candidate: string): string =>
+        path.resolve(candidate) === path.resolve(binFile) ? path.resolve(realFile) : path.resolve(candidate);
+      assert.equal(isDirectExecution(pathToFileURL(realFile).href, binFile, fakeRealpath), true);
+    }
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
 });
 
 test("src/index.ts exports main without auto-starting the REPL when imported", async () => {

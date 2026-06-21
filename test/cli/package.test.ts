@@ -35,3 +35,9 @@ test("package defines a built CLI smoke test script", async () => {
 
   assert.equal(pkg.scripts?.["test:cli"], "npm run build && node dist/cli.js --help && node dist/cli.js --version");
 });
+
+test("package builds before packing so bin targets exist in published tarballs", async () => {
+  const pkg = await readPackageJson();
+
+  assert.equal(pkg.scripts?.prepack, "npm run build");
+});
