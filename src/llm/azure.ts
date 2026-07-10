@@ -59,7 +59,6 @@ export class AzureOpenAIProvider implements Provider {
   async callModel(opts: CallModelOptions): Promise<CallModelResponse> {
     // Azure ignores `model` (deployment is in the URL) but accepts it harmlessly.
     const body = {
-      max_tokens: opts.maxTokens ?? 4096,
       messages: toOpenAIMessages(opts.system, opts.messages),
       ...(opts.tools.length > 0 ? { tools: toOpenAITools(opts.tools) } : {}),
     };
