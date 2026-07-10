@@ -24,8 +24,8 @@
 
 - Create `src/cli.ts`: package-facing bootstrap. Owns CLI help/version output, Node version validation, and calls `main(argv)` from `src/index.ts`.
 - Modify `src/index.ts`: export `main(argv?: string[])`, accept forwarded argv, and only auto-run when executed directly.
-- Create `test/cli/cli.test.ts`: unit tests for bootstrap helpers without entering the REPL.
-- Create `test/cli/package.test.ts`: validates package bin aliases, files list, and scripts.
+- Create `tests/cli/cli.test.ts`: unit tests for bootstrap helpers without entering the REPL.
+- Create `tests/cli/package.test.ts`: validates package bin aliases, files list, and scripts.
 - Modify `package.json`: point `main` and both `bin` commands to `dist/cli.js`, add publish files and CLI smoke script.
 - Modify `README.md`: update quick start from `npm run dev`-only to global install plus local development commands.
 - Create `skills/.gitkeep`: ensures the package-local `skills/` directory exists in source and npm file lists.
@@ -36,7 +36,7 @@
 
 **Files:**
 - Create: `src/cli.ts`
-- Create: `test/cli/cli.test.ts`
+- Create: `tests/cli/cli.test.ts`
 
 **Interfaces:**
 - Consumes: no project interfaces yet.
@@ -48,7 +48,7 @@
 
 - [ ] **Step 1: Write the failing CLI helper tests**
 
-Create `test/cli/cli.test.ts`:
+Create `tests/cli/cli.test.ts`:
 
 ```ts
 import assert from "node:assert/strict";
@@ -209,14 +209,14 @@ Run:
 npm test -- --test-name-pattern "validateNodeVersion|formatHelp|isDirectExecution"
 ```
 
-Expected: PASS for all four tests in `test/cli/cli.test.ts`.
+Expected: PASS for all four tests in `tests/cli/cli.test.ts`.
 
 - [ ] **Step 5: Commit Task 1**
 
 Run:
 
 ```pwsh
-git add src\cli.ts test\cli\cli.test.ts
+git add src\cli.ts tests\cli\cli.test.ts
 git commit -m "Add openagent CLI bootstrap helpers" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
 
@@ -241,7 +241,7 @@ Expected: commit succeeds when Git author identity is configured.
 
 - [ ] **Step 1: Write the failing import-safety test**
 
-Append this test to `test/cli/cli.test.ts`:
+Append this test to `tests/cli/cli.test.ts`:
 
 ```ts
 test("src/index.ts exports main without auto-starting the REPL when imported", async () => {
@@ -326,7 +326,7 @@ Expected: PASS for the CLI tests.
 Run:
 
 ```pwsh
-git add src\index.ts test\cli\cli.test.ts
+git add src\index.ts tests\cli\cli.test.ts
 git commit -m "Make agent runtime import-safe" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
 
@@ -338,7 +338,7 @@ Expected: commit succeeds when Git author identity is configured.
 
 **Files:**
 - Modify: `package.json`
-- Create: `test/cli/package.test.ts`
+- Create: `tests/cli/package.test.ts`
 - Create: `skills/.gitkeep`
 
 **Interfaces:**
@@ -352,7 +352,7 @@ Expected: commit succeeds when Git author identity is configured.
 
 - [ ] **Step 1: Write the failing package metadata tests**
 
-Create `test/cli/package.test.ts`:
+Create `tests/cli/package.test.ts`:
 
 ```ts
 import { promises as fs } from "node:fs";
@@ -429,7 +429,7 @@ Modify the top of `package.json` to match:
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
-    "test": "tsx --test \"test/**/*.test.ts\"",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
     "test:cli": "npm run build && node dist/cli.js --help && node dist/cli.js --version",
     "start": "node dist/cli.js",
     "typecheck": "tsc --noEmit"
@@ -453,14 +453,14 @@ Run:
 npm test -- --test-name-pattern "package exposes|package publish|built CLI smoke"
 ```
 
-Expected: PASS for the three tests in `test/cli/package.test.ts`.
+Expected: PASS for the three tests in `tests/cli/package.test.ts`.
 
 - [ ] **Step 6: Commit Task 3**
 
 Run:
 
 ```pwsh
-git add package.json test\cli\package.test.ts skills\.gitkeep
+git add package.json tests\cli\package.test.ts skills\.gitkeep
 git commit -m "Expose openagent npm bin aliases" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
 
@@ -471,7 +471,7 @@ Expected: commit succeeds when Git author identity is configured.
 ### Task 4: Verify built CLI behavior and resource lookup
 
 **Files:**
-- Modify: `test/cli/cli.test.ts`
+- Modify: `tests/cli/cli.test.ts`
 
 **Interfaces:**
 - Consumes:
@@ -482,7 +482,7 @@ Expected: commit succeeds when Git author identity is configured.
 
 - [ ] **Step 1: Add tests for non-REPL CLI paths**
 
-Append to `test/cli/cli.test.ts`:
+Append to `tests/cli/cli.test.ts`:
 
 ```ts
 test("runCli prints version without validating runtime credentials", async () => {
@@ -537,7 +537,7 @@ test("runCli rejects old Node versions before entering the agent runtime", async
 });
 ```
 
-Update the import in `test/cli/cli.test.ts` to include `runCli`:
+Update the import in `tests/cli/cli.test.ts` to include `runCli`:
 
 ```ts
 import { formatHelp, isDirectExecution, runCli, validateNodeVersion } from "../../src/cli.js";
@@ -610,7 +610,7 @@ Expected: PASS for all tests.
 Run:
 
 ```pwsh
-git add test\cli\cli.test.ts dist package.json
+git add tests\cli\cli.test.ts dist package.json
 git commit -m "Verify built openagent CLI behavior" -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
 ```
 
@@ -750,5 +750,5 @@ Run:
 git --no-pager diff --stat
 ```
 
-Expected: changed files match this plan: `src/cli.ts`, `src/index.ts`, `test/cli/cli.test.ts`, `test/cli/package.test.ts`, `package.json`, `README.md`, and `skills/.gitkeep`.
+Expected: changed files match this plan: `src/cli.ts`, `src/index.ts`, `tests/cli/cli.test.ts`, `tests/cli/package.test.ts`, `package.json`, `README.md`, and `skills/.gitkeep`.
 
